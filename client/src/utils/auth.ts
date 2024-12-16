@@ -1,30 +1,47 @@
 import { JwtPayload, jwtDecode } from 'jwt-decode';
 
+interface LocalJwtPayload {
+  username: string;
+  exp: number; // Expiration time of the token
+}
+
+
 class AuthService {
-  getProfile() {
-    // TODO: return the decoded token
+  // Decode the token to get user profile
+  getProfile(): JwtPayload| null {
+    const token = this.getToken();
+    if (!token) return null;
+    return jwtDecode<JwtPayload>(token);
   }
 
-  loggedIn() {
-    // TODO: return a value that indicates if the user is logged in
-  }
-  
-  isTokenExpired(token: string) {
-    // TODO: return a value that indicates if the token is expired
+  // Check if the user is logged in
+  loggedIn(): boolean {
+    const token = this.getToken();
+    return !!token && !this.isTokenExpired(token);
   }
 
-  getToken(): string {
-    // TODO: return the token
+  // Check if the token is expired
+  isTokenExpired(token: string): boolean {
+    const decoded = jwtDecode<LocalJwtPayload>(token);
+    if (!decoded.exp) return true; // If no expiry, treat as expired
+    return Date.now() >= decoded.exp * 1000;
   }
 
-  login(idToken: string) {
-    // TODO: set the token to localStorage
-    // TODO: redirect to the home page
+  // Get the JWT from localStorage
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
-  logout() {
-    // TODO: remove the token from localStorage
-    // TODO: redirect to the login page
+  // Save the JWT to localStorage and redirect
+  login(idToken: string): void {
+    localStorage.setItem('token', idToken);
+    window.location.href = '/kanban'; // Redirect to the Kanban board
+  }
+
+  // Clear the JWT and redirect to login
+  logout(): void {
+    localStorage.removeItem('token');
+    window.location.href = '/login'; // Redirect to the login page
   }
 }
 
